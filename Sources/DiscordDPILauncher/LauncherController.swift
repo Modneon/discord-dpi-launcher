@@ -1,5 +1,4 @@
 import AppKit
-import CoreGraphics
 import Foundation
 
 final class LauncherController: ObservableObject {
@@ -9,7 +8,6 @@ final class LauncherController: ObservableObject {
     @Published private(set) var isLaunchingDiscord = false
 
     private var spoofProcess: Process?
-    private var discordProcess: Process?
     private var outputPipe: Pipe?
     private var errorPipe: Pipe?
     private var terminationObserver: NSObjectProtocol?
@@ -17,7 +15,7 @@ final class LauncherController: ObservableObject {
 
     private let proxyAddress = "http://127.0.0.1:8080"
     private let discordExecutable = "/Applications/Discord.app/Contents/MacOS/Discord"
-    private let screenCapturePermissionRequestedKey = "screenCapturePermissionRequested"
+    private let discordApplicationURL = URL(fileURLWithPath: "/Applications/Discord.app")
 
     var canOpenDiscord: Bool { status == .running }
 
@@ -89,7 +87,6 @@ final class LauncherController: ObservableObject {
             detailMessage = "Discord /Applications klasöründe bulunamadı."
             return
         }
-        guard requestScreenCaptureAccessIfNeeded() else { return }
 
         isLaunchingDiscord = true
         detailMessage = "Discord güvenli biçimde yeniden başlatılıyor…"
@@ -98,33 +95,8 @@ final class LauncherController: ObservableObject {
         existingApps.forEach { $0.terminate() }
 
         waitForDiscordToExit(attemptsRemaining: 20) { [weak self] in
-            self?.launchDiscordProcess()
+            self?.launchDiscordApplication()
         }
-    }
-
-    private func requestScreenCaptureAccessIfNeeded() -> Bool {
-        guard !CGPreflightScreenCaptureAccess() else { return true }
-
-        let hasRequestedAccess = UserDefaults.standard.bool(forKey: screenCapturePermissionRequestedKey)
-        UserDefaults.standard.set(true, forKey: screenCapturePermissionRequestedKey)
-
-        detailMessage = "Ekran paylaşımı için macOS ekran kaydı izni isteniyor…"
-        if CGRequestScreenCaptureAccess() {
-            return true
-        }
-
-        detailMessage = "Ekran paylaşımı için Sistem Ayarları'nda ekran kaydı izni verin, sonra yeniden deneyin."
-        if hasRequestedAccess {
-            openScreenCapturePrivacySettings()
-        }
-        return false
-    }
-
-    private func openScreenCapturePrivacySettings() {
-        guard let settingsURL = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
-        ) else { return }
-        NSWorkspace.shared.open(settingsURL)
     }
 
     private func startSpoofDPI() {
@@ -251,10 +223,9 @@ final class LauncherController: ObservableObject {
         }
     }
 
-    private func launchDiscordProcess() {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: discordExecutable)
-        process.arguments = [
+    private func launchDiscordApplication() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.arguments = [
             "--proxy-server=\(proxyAddress)",
             "--disable-quic"
         ]
@@ -264,30 +235,25 @@ final class LauncherController: ObservableObject {
         environment["HTTP_PROXY"] = proxyAddress
         environment["ALL_PROXY"] = proxyAddress
         environment["NO_PROXY"] = "localhost,127.0.0.1"
-        process.environment = environment
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
+        configuration.environment = environment
+        configuration.activates = true
+        configuration.createsNewApplicationInstance = true
 
-        process.terminationHandler = { [weak self] _ in
+        NSWorkspace.shared.openApplication(
+            at: discordApplicationURL,
+            configuration: configuration
+        ) { [weak self] application, error in
             DispatchQueue.main.async {
-                self?.discordProcess = nil
-            }
-        }
-
-        do {
-            try process.run()
-            discordProcess = process
-            detailMessage = "Discord proxy üzerinden başlatıldı."
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
                 guard let self else { return }
                 self.isLaunchingDiscord = false
-                NSRunningApplication.runningApplications(withBundleIdentifier: "com.hnc.Discord")
-                    .first?
-                    .activate(options: [.activateAllWindows])
+                if let error {
+                    self.detailMessage = "Discord başlatılamadı: \(error.localizedDescription)"
+                    return
+                }
+
+                self.detailMessage = "Discord proxy üzerinden başlatıldı."
+                application?.activate(options: [.activateAllWindows])
             }
-        } catch {
-            isLaunchingDiscord = false
-            detailMessage = "Discord başlatılamadı: \(error.localizedDescription)"
         }
     }
 
