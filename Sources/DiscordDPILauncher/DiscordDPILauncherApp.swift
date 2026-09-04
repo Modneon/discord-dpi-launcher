@@ -9,7 +9,7 @@ struct DiscordDPILauncherApp: App {
         WindowGroup {
             ContentView(controller: controller)
                 .frame(minWidth: 440, idealWidth: 440, maxWidth: 440,
-                       minHeight: 330, idealHeight: 330, maxHeight: 330)
+                       minHeight: 380, idealHeight: 380, maxHeight: 380)
         }
         .windowResizability(.contentSize)
         .commands {
@@ -23,10 +23,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "bolt.horizontal.circle.fill")
-                .font(.system(size: 54, weight: .semibold))
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(.white, Color.indigo)
+            appLogo
 
             VStack(spacing: 6) {
                 Text("Discord DPI Launcher")
@@ -74,6 +71,24 @@ struct ContentView: View {
         )
         .task {
             controller.startSpoofDPIIfNeeded()
+        }
+    }
+
+    @ViewBuilder
+    private var appLogo: some View {
+        if let iconPath = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
+           let icon = NSImage(contentsOfFile: iconPath) {
+            Image(nsImage: icon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 88, height: 88)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(color: .indigo.opacity(0.24), radius: 12, y: 6)
+        } else {
+            Image(systemName: "bolt.horizontal.circle.fill")
+                .font(.system(size: 54, weight: .semibold))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, Color.indigo)
         }
     }
 
