@@ -25,6 +25,8 @@ Uygulama açıldığında SpoofDPI'yi şu yapılandırmayla başlatır:
 - `/Applications/Discord.app`
 - Homebrew ile kurulmuş SpoofDPI (`/opt/homebrew/bin/spoofdpi` veya `/usr/local/bin/spoofdpi`)
 
+İlk ses kanalı bağlantısında macOS mikrofon izni isteyebilir. Sesli görüşme için bu izni verin.
+
 ## Derleme
 
 Terminal'de proje klasörüne girip:
