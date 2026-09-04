@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import Foundation
 
 final class LauncherController: ObservableObject {
@@ -16,6 +17,7 @@ final class LauncherController: ObservableObject {
 
     private let proxyAddress = "http://127.0.0.1:8080"
     private let discordExecutable = "/Applications/Discord.app/Contents/MacOS/Discord"
+    private let screenCapturePermissionRequestedKey = "screenCapturePermissionRequested"
 
     var canOpenDiscord: Bool { status == .running }
 
@@ -87,6 +89,7 @@ final class LauncherController: ObservableObject {
             detailMessage = "Discord /Applications klasöründe bulunamadı."
             return
         }
+        guard requestScreenCaptureAccessIfNeeded() else { return }
 
         isLaunchingDiscord = true
         detailMessage = "Discord güvenli biçimde yeniden başlatılıyor…"
@@ -97,6 +100,31 @@ final class LauncherController: ObservableObject {
         waitForDiscordToExit(attemptsRemaining: 20) { [weak self] in
             self?.launchDiscordProcess()
         }
+    }
+
+    private func requestScreenCaptureAccessIfNeeded() -> Bool {
+        guard !CGPreflightScreenCaptureAccess() else { return true }
+
+        let hasRequestedAccess = UserDefaults.standard.bool(forKey: screenCapturePermissionRequestedKey)
+        UserDefaults.standard.set(true, forKey: screenCapturePermissionRequestedKey)
+
+        detailMessage = "Ekran paylaşımı için macOS ekran kaydı izni isteniyor…"
+        if CGRequestScreenCaptureAccess() {
+            return true
+        }
+
+        detailMessage = "Ekran paylaşımı için Sistem Ayarları'nda ekran kaydı izni verin, sonra yeniden deneyin."
+        if hasRequestedAccess {
+            openScreenCapturePrivacySettings()
+        }
+        return false
+    }
+
+    private func openScreenCapturePrivacySettings() {
+        guard let settingsURL = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+        ) else { return }
+        NSWorkspace.shared.open(settingsURL)
     }
 
     private func startSpoofDPI() {

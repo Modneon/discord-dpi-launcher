@@ -27,6 +27,8 @@ Uygulama açıldığında SpoofDPI'yi şu yapılandırmayla başlatır:
 
 İlk ses kanalı bağlantısında macOS mikrofon izni isteyebilir. Sesli görüşme için bu izni verin.
 
+Discord ilk kez açılırken macOS ekran kaydı izni istenir. Ekran paylaşımı için bu izni verin; daha önce reddettiyseniz **Discord'u Aç** düğmesine yeniden bastığınızda uygulama ilgili Sistem Ayarları bölümünü açar.
+
 ## Derleme
 
 Terminal'de proje klasörüne girip:
