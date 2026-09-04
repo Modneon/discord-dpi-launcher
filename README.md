@@ -38,3 +38,9 @@ Terminal'de proje klasörüne girip:
 Uygulama `dist/Discord DPI Launcher.app` altında oluşur.
 
 Uygulamayı kapatmak, uygulamanın başlattığı SpoofDPI sürecini de durdurur. Başka bir SpoofDPI zaten 8080 portunda çalışıyorsa uygulama onu kullanır ve kapatmaz.
+
+## Teşekkür ve bağımsızlık bildirimi
+
+Bu proje, [xvzc tarafından geliştirilen SpoofDPI](https://github.com/xvzc/spoofdpi) aracını kullanır. SpoofDPI, [Apache License 2.0](https://github.com/xvzc/spoofdpi/blob/main/LICENSE) kapsamında yayımlanmaktadır.
+
+Discord DPI Launcher bağımsız ve topluluk yapımı bir projedir; Discord Inc. veya SpoofDPI projesiyle resmî bağlantısı ya da onayı yoktur. SpoofDPI kodu ve çalıştırılabilir dosyası bu uygulamanın içinde dağıtılmaz; sistemde ayrıca kurulu olan SpoofDPI çalıştırılır.
