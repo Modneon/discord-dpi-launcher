@@ -1,5 +1,9 @@
 # Discord DPI Launcher
 
+<p align="center">
+  <img src="Resources/AppIcon.png" alt="Discord DPI Launcher logo" width="180">
+</p>
+
 macOS için küçük bir SwiftUI başlatıcısıdır.
 
 Uygulama açıldığında SpoofDPI'yi şu yapılandırmayla başlatır:
